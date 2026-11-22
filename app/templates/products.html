@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('products.title') }}{% endblock %}
+{% block heading %}{{ t('products.title') }}{% endblock %}
+{% block actions %}
+  <div class="dropdown">
+    <button class="btn" type="button" aria-haspopup="true" aria-expanded="false">⤓ {{ t('products.export') }}</button>
+    <div class="dropdown-menu">
+      <a id="export-xlsx" href="{{ url_for('views.export_xlsx', **args.to_dict()) }}">Excel (.xlsx)</a>
+      <a id="export-csv" href="{{ url_for('views.export_csv', **args.to_dict()) }}">CSV</a>
+    </div>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('views.product_new') }}">+ {{ t('nav.new') }}</a>
+{% endblock %}
+{% block content %}
+<form class="filters card" id="filters" method="get" action="{{ url_for('views.products') }}">
+  <label class="search"><span class="sr">{{ t('products.search') }}</span>
+    <input type="search" name="q" value="{{ args.q or '' }}" placeholder="{{ t('products.search') }}" autocomplete="off" />
+  </label>
+  <label><span class="sr">{{ t('products.category') }}</span>
+    <select name="category"><option value="">{{ t('products.category') }}: {{ t('products.all') }}</option>
+      {% for c in categories %}<option value="{{ c }}" {{ 'selected' if args.category == c }}>{{ category_name(c) }}</option>{% endfor %}
+    </select></label>
+  <label><span class="sr">{{ t('products.brand') }}</span>
+    <select name="brand"><option value="">{{ t('products.all_brands') }}</option>
+      {% for b in brands %}<option {{ 'selected' if args.brand == b }}>{{ b }}</option>{% endfor %}
+    </select></label>
+  <div class="seg" role="group" aria-label="{{ t('products.stock') }}">
+    {% for key in ['', 'ok', 'low', 'out'] %}
+      <label><input type="radio" name="stock" value="{{ key }}" {{ 'checked' if (args.stock or '') == key }} /><span>{% if key %}<i class="st st-{{ key }}" aria-hidden="true"></i>{% endif %}{{ t('products.stock_' ~ (key or 'all')) }}</span></label>
+    {% endfor %}
+  </div>
+  <input type="hidden" name="sort" value="{{ sort }}" /><input type="hidden" name="dir" value="{{ direction }}" />
+  <noscript><button class="btn" type="submit">OK</button></noscript>
+</form>
+<div id="results" aria-live="polite">{% include '_products_results.html' %}</div>
+{% endblock %}

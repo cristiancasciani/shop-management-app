@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('login.title') }}{% endblock %}
+{% block body_class %}login-page{% endblock %}
+{% block layout %}
+<main class="login">
+  <div class="login-card">
+    <a class="brand" href="#">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12h4l2-5 4 10 2-5h4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span><strong>{{ t('app.name') }}</strong><small>{{ t('app.tagline') }}</small></span>
+    </a>
+    <h1>{{ t('login.title') }}</h1>
+    {% if error %}<p class="alert" role="alert">{{ error }}</p>{% endif %}
+    <form method="post" class="stack">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+      <label class="field"><span>{{ t('login.user') }}</span><input name="username" autocomplete="username" required autofocus value="{{ request.form.username or '' }}" /></label>
+      <label class="field"><span>{{ t('login.password') }}</span><input name="password" type="password" autocomplete="current-password" required /></label>
+      <button class="btn btn-primary btn-block" type="submit">{{ t('login.submit') }}</button>
+    </form>
+    <div class="hint">
+      <strong>{{ t('login.hint') }}</strong>
+      <div><code>{{ demo[0] }}</code> / <code>{{ demo[1] }}</code></div>
+      <button type="button" class="link-btn" data-fill-demo="{{ demo[0] }}|{{ demo[1] }}">↳ {{ 'Compila' if lang() == 'it' else 'Fill in' }}</button>
+    </div>
+    <p class="login-foot"><a href="{{ url_for('set_lang', code='en' if lang() == 'it' else 'it', next=request.full_path) }}">🌐 {{ t('lang.switch') }}</a> · {{ t('demo.banner') }}</p>
+  </div>
+</main>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% set title = t('form.edit') if product else t('form.new') %}
+{% block title %}{{ title }}{% endblock %}
+{% block heading %}{{ title }}{% endblock %}
+{% macro field(name, label, type='text', help=None, attrs='') -%}
+  <label class="field {{ 'invalid' if errors[name] }}">
+    <span>{{ label }}</span>
+    <input name="{{ name }}" type="{{ type }}" value="{{ data[name] if data[name] is not none else '' }}" {{ attrs|safe }} {{ 'aria-invalid=true' if errors[name] }} />
+    {% if errors[name] %}<em class="err">{{ errors[name] }}</em>{% elif help %}<small class="help">{{ help }}</small>{% endif %}
+  </label>
+{%- endmacro %}
+{% block content %}
+<form method="post" class="card form" novalidate>
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+  <div class="form-grid">
+    {{ field('name', t('col.name'), attrs='required maxlength=80 autofocus') }}
+    {{ field('sku', t('col.sku'), attrs='required maxlength=20 class=mono') }}
+    {{ field('brand', t('col.brand'), attrs='required maxlength=40 list=brand-list') }}
+    <label class="field {{ 'invalid' if errors.category }}">
+      <span>{{ t('col.category') }}</span>
+      <select name="category" required>
+        <option value="">—</option>
+        {% for c in categories %}<option value="{{ c }}" {{ 'selected' if data.category == c }}>{{ category_name(c) }}</option>{% endfor %}
+      </select>
+      {% if errors.category %}<em class="err">{{ errors.category }}</em>{% endif %}
+    </label>
+    {{ field('cost', t('col.cost') ~ ' (€)', 'text', attrs='required inputmode=decimal data-money') }}
+    {{ field('price', t('col.price') ~ ' (€)', 'text', attrs='required inputmode=decimal data-money') }}
+    {% if product %}
+      <div class="field"><span>{{ t('detail.stock') }}</span><div class="readonly">{{ product.quantity }} <small class="help">— {{ t('form.qty_help') }}</small></div></div>
+    {% else %}
+      {{ field('quantity', t('col.qty'), 'number', t('form.qty_help'), 'min=0 step=1 required') }}
+    {% endif %}
+    {{ field('min_stock', t('col.min'), 'number', t('form.min_help'), 'min=0 step=1 required') }}
+  </div>
+  <p class="margin-preview" id="margin" hidden></p>
+  <div class="form-actions">
+    <a class="btn" href="{{ url_for('views.product_detail', pid=product.id) if product else url_for('views.products') }}">{{ t('form.cancel') }}</a>
+    <button class="btn btn-primary" type="submit">{{ t('form.save') }}</button>
+  </div>
+  <datalist id="brand-list">{% for b in ['Apple','Samsung','Google','Xiaomi','Sony','Lenovo','ASUS','Acer','HP','JBL','Bose','Anker','Garmin','Nintendo','Microsoft','Amazon','Philips','Roborock','Belkin','Logitech','SanDisk'] %}<option>{{ b }}</option>{% endfor %}</datalist>
+</form>
+{% endblock %}

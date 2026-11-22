@@ -1,0 +1,14 @@
+# Render blueprint: free Python web service. SQLite lives on the instance disk,
+# so the demo data is recreated (fresh 60-day history) after each deploy or restart.
+services:
+  - type: web
+    name: circuito-shop-demo
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -w 2 -b 0.0.0.0:$PORT wsgi:app
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: 3.13.5

@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% set st = stock_status(p) %}
+{% block title %}{{ p.name }}{% endblock %}
+{% block heading %}<a class="crumb" href="{{ url_for('views.products') }}">{{ t('nav.products') }}</a> / {{ p.name }}{% endblock %}
+{% block actions %}
+  <a class="btn" href="{{ url_for('views.product_edit', pid=p.id) }}">✎ {{ t('detail.edit') }}</a>
+  <form method="post" action="{{ url_for('views.product_delete', pid=p.id) }}" data-confirm="{{ t('detail.delete_confirm') }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+    <button class="btn btn-danger" type="submit">{{ t('detail.delete') }}</button>
+  </form>
+{% endblock %}
+{% block content %}
+<section class="detail-head card">
+  <div>
+    <p class="muted mono">{{ p.sku }} · {{ p.brand }} · {{ category_name(p.category) }}</p>
+    <span class="badge badge-{{ st }}"><i class="st st-{{ st }}" aria-hidden="true"></i>{{ t('status.' ~ st) }}</span>
+  </div>
+  <dl class="facts">
+    <div><dt>{{ t('detail.stock') }}</dt><dd class="big">{{ p.quantity }}<small> / min {{ p.min_stock }}</small></dd></div>
+    <div><dt>{{ t('col.cost') }}</dt><dd>{{ p.cost|money }}</dd></div>
+    <div><dt>{{ t('col.price') }}</dt><dd>{{ p.price|money }}</dd></div>
+    <div><dt>{{ t('detail.margin') }}</dt><dd>{{ (p.price - p.cost)|money }} <small class="muted">({{ ((p.price - p.cost) / p.price * 100) | round | int if p.price else 0 }}%)</small></dd></div>
+    <div><dt>{{ t('detail.value') }}</dt><dd>{{ (p.quantity * p.cost)|money }}</dd></div>
+  </dl>
+</section>
+
+<section class="grid-detail">
+  <article class="card">
+    <header><h2>{{ t('detail.move') }}</h2></header>
+    <form method="post" action="{{ url_for('views.product_move', pid=p.id) }}" class="stack" id="move-form" novalidate>
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+      {% set kind = form.kind or 'in' %}
+      <div class="seg seg-full" role="radiogroup" aria-label="{{ t('move.kind') }}">
+        {% for k in ['in', 'out', 'adjust'] %}
+          <label><input type="radio" name="kind" value="{{ k }}" {{ 'checked' if kind == k }} /><span>{{ t('kind.' ~ k) }}</span></label>
+        {% endfor %}
+      </div>
+      <label class="field {{ 'invalid' if errors.qty }}"><span>{{ t('move.qty') }}</span>
+        <input name="qty" type="number" step="1" required value="{{ form.qty or '' }}" {{ 'aria-invalid=true' if errors.qty }} />
+        {% if errors.qty %}<em class="err">{{ errors.qty }}</em>{% else %}<small class="help" data-adjust-help hidden>{{ t('move.adjust_help') }}</small>{% endif %}
+      </label>
+      <label class="field"><span>{{ t('move.reason') }}</span>
+        <select name="reason">
+          {% for k, rs in reasons.items() %}{% for r in rs %}
+            <option value="{{ r }}" data-kind="{{ k }}" {{ 'selected' if form.reason == r and form.kind == k }}>{{ t('reason.' ~ r) }}</option>
+          {% endfor %}{% endfor %}
+        </select>
+      </label>
+      <label class="field"><span>{{ t('move.note') }}</span><input name="note" maxlength="200" value="{{ form.note or '' }}" /></label>
+      <button class="btn btn-primary btn-block" type="submit">{{ t('move.submit') }}</button>
+    </form>
+  </article>
+  <article class="card">
+    <header><h2>{{ t('detail.history') }}</h2></header>
+    {% if moves %}
+    <div class="table-wrap history">
+    <table class="table compact">
+      <thead><tr><th>{{ t('col.date') }}</th><th>{{ t('col.reason') }}</th><th class="hide-sm">{{ t('col.note') }}</th><th class="num">{{ t('move.qty') }}</th></tr></thead>
+      <tbody>{% for m in moves %}
+        <tr><td class="nowrap">{{ m.created_at|datefmt }}</td><td><span class="kind kind-{{ m.kind }}">{{ t('kind.' ~ m.kind) }}</span> {{ t('reason.' ~ m.reason) }}</td>
+        <td class="hide-sm muted">{{ m.note }}</td><td class="num"><span class="delta {{ 'pos' if m.qty > 0 else 'neg' }}">{{ '%+d'|format(m.qty) }}</span></td></tr>
+      {% endfor %}</tbody>
+    </table>
+    </div>
+    {% else %}<p class="empty">{{ t('detail.no_moves') }}</p>{% endif %}
+  </article>
+</section>
+{% endblock %}

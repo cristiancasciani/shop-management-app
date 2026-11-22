@@ -1,0 +1,45 @@
+{% macro sort_th(key, label, cls='') -%}
+  {% set active = sort == key %}{% set next_dir = 'desc' if active and direction == 'asc' else 'asc' %}
+  <th class="{{ cls }}" aria-sort="{{ ('ascending' if direction == 'asc' else 'descending') if active else 'none' }}">
+    <button type="button" class="sort {{ 'on' if active }}" data-sort="{{ key }}" data-dir="{{ next_dir }}">{{ label }}<i>{{ ('↑' if direction == 'asc' else '↓') if active else '↕' }}</i></button>
+  </th>
+{%- endmacro %}
+<div class="results-head">
+  <span>{{ t('products.count_one') if total == 1 else t('products.count', n=total) }}</span>
+  {% if args.q or args.category or args.brand or args.stock %}<a class="link" href="{{ url_for('views.products') }}" data-clear>{{ t('products.clear') }}</a>{% endif %}
+</div>
+{% if rows %}
+<div class="table-wrap card">
+<table class="table">
+  <thead><tr>
+    {{ sort_th('sku', t('col.sku'), 'hide-sm') }}{{ sort_th('name', t('col.name')) }}{{ sort_th('brand', t('col.brand'), 'hide-sm') }}
+    <th class="hide-sm">{{ t('col.category') }}</th>
+    {{ sort_th('price', t('col.price'), 'num') }}{{ sort_th('qty', t('col.qty'), 'num') }}{{ sort_th('value', t('col.value'), 'num hide-sm') }}
+    <th>{{ t('col.status') }}</th>
+  </tr></thead>
+  <tbody>
+  {% for p in rows %}{% set st = stock_status(p) %}
+    <tr data-href="{{ url_for('views.product_detail', pid=p.id) }}">
+      <td class="mono hide-sm">{{ p.sku }}</td>
+      <td><a href="{{ url_for('views.product_detail', pid=p.id) }}">{{ p.name }}</a></td>
+      <td class="hide-sm">{{ p.brand }}</td>
+      <td class="hide-sm muted">{{ category_name(p.category) }}</td>
+      <td class="num">{{ p.price|money }}</td>
+      <td class="num"><strong>{{ p.quantity }}</strong></td>
+      <td class="num hide-sm muted">{{ (p.quantity * p.cost)|money }}</td>
+      <td><span class="badge badge-{{ st }}"><i class="st st-{{ st }}" aria-hidden="true"></i>{{ t('status.' ~ st) }}</span></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% if pages > 1 %}
+<nav class="pager">
+  <button type="button" class="btn" data-page="{{ page - 1 }}" {{ 'disabled' if page == 1 }}>← {{ t('page.prev') }}</button>
+  <span>{{ t('page.of', p=page, n=pages) }}</span>
+  <button type="button" class="btn" data-page="{{ page + 1 }}" {{ 'disabled' if page == pages }}>{{ t('page.next') }} →</button>
+</nav>
+{% endif %}
+{% else %}
+<p class="empty card">{{ t('products.empty') }}</p>
+{% endif %}

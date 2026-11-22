@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="{{ lang() }}">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}{% endblock %} · {{ t('app.name') }}</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}" />
+  <meta name="csrf" content="{{ csrf_token() }}" />
+</head>
+<body class="{% block body_class %}{% endblock %}">
+{% block layout %}
+  <div class="demo-banner">{{ t('demo.banner') }}</div>
+  <div class="shell">
+    <aside class="side" id="side">
+      <a class="brand" href="{{ url_for('views.dashboard') }}">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12h4l2-5 4 10 2-5h4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span><strong>{{ t('app.name') }}</strong><small>{{ t('app.tagline') }}</small></span>
+      </a>
+      {% set ep = request.endpoint %}
+      <nav class="side-nav">
+        <a href="{{ url_for('views.dashboard') }}" class="{{ 'on' if ep == 'views.dashboard' }}"><i class="i i-dash"></i>{{ t('nav.dashboard') }}</a>
+        <a href="{{ url_for('views.products') }}" class="{{ 'on' if ep and ep.startswith('views.product') }}"><i class="i i-box"></i>{{ t('nav.products') }}</a>
+        <a href="{{ url_for('views.movements') }}" class="{{ 'on' if ep == 'views.movements' }}"><i class="i i-swap"></i>{{ t('nav.movements') }}</a>
+      </nav>
+      <a class="btn btn-primary side-new" href="{{ url_for('views.product_new') }}">+ {{ t('nav.new') }}</a>
+      <div class="side-foot">
+        <a class="side-link" href="{{ url_for('set_lang', code='en' if lang() == 'it' else 'it', next=request.full_path) }}">🌐 {{ t('lang.switch') }}</a>
+        <form method="post" action="{{ url_for('views.reset_demo') }}" data-confirm="{{ t('nav.reset_confirm') }}">
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+          <button class="side-link" type="submit">↺ {{ t('nav.reset') }}</button>
+        </form>
+        <div class="side-user">
+          <span class="avatar">{{ g.user.name[:1] }}</span><span>{{ g.user.name }}</span>
+          <form method="post" action="{{ url_for('auth.logout') }}">
+            <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+            <button class="link-btn" type="submit">{{ t('nav.logout') }}</button>
+          </form>
+        </div>
+      </div>
+    </aside>
+    <div class="main">
+      <header class="top">
+        <button class="menu-btn" type="button" aria-controls="side" aria-expanded="false" aria-label="Menu">☰</button>
+        <h1>{% block heading %}{% endblock %}</h1>
+        <div class="top-actions">{% block actions %}{% endblock %}</div>
+      </header>
+      {% with msgs = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in msgs %}<div class="flash flash-{{ cat }}" role="status">{{ msg }}<button type="button" aria-label="×">×</button></div>{% endfor %}
+      {% endwith %}
+      <main class="content">{% block content %}{% endblock %}</main>
+      <footer class="foot">{{ t('footer.demo') }} <a href="https://cristiancasciani.github.io/" target="_blank" rel="noreferrer">Cristian Casciani</a> · Flask · SQLite · JavaScript</footer>
+    </div>
+  </div>
+{% endblock %}
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

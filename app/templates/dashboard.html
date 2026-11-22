@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('dash.title') }}{% endblock %}
+{% block heading %}{{ t('dash.title') }}{% endblock %}
+{% block actions %}<a class="btn" href="{{ url_for('views.export_xlsx') }}">⤓ Excel</a>{% endblock %}
+{% block content %}
+<section class="kpis">
+  <div class="kpi"><span>{{ t('dash.products') }}</span><strong>{{ k.products|number }}</strong></div>
+  <div class="kpi"><span>{{ t('dash.units') }}</span><strong>{{ k.units|number }}</strong></div>
+  <div class="kpi"><span>{{ t('dash.value_cost') }}</span><strong>{{ k.value_cost|money }}</strong></div>
+  <div class="kpi"><span>{{ t('dash.value_retail') }}</span><strong>{{ k.value_retail|money }}</strong></div>
+  <a class="kpi kpi-warn" href="{{ url_for('views.products', stock='low') }}"><span><i class="st st-low" aria-hidden="true"></i>{{ t('dash.low') }}</span><strong>{{ k.low or 0 }}</strong></a>
+  <a class="kpi kpi-crit" href="{{ url_for('views.products', stock='out') }}"><span><i class="st st-out" aria-hidden="true"></i>{{ t('dash.out') }}</span><strong>{{ k.out or 0 }}</strong></a>
+</section>
+
+<section class="grid-2">
+  <article class="card viz-card">
+    <header><h2>{{ t('dash.flow') }}</h2><p>{{ t('dash.flow_sub') }}</p></header>
+    <div class="legend" aria-hidden="true"><span><i class="sw sw-1"></i>{{ t('dash.in') }}</span><span><i class="sw sw-2"></i>{{ t('dash.out_units') }}</span></div>
+    <div class="chart" id="flow-chart" role="img" aria-label="{{ t('dash.flow') }}"></div>
+    <details class="viz-table"><summary>{{ t('dash.table') }}</summary>
+      <table class="table compact"><thead><tr><th>{{ t('dash.day') }}</th><th class="num">{{ t('dash.in') }}</th><th class="num">{{ t('dash.out_units') }}</th></tr></thead>
+      <tbody>{% for d in flow|reverse %}<tr><td>{{ d.day|datefmt(false) }}</td><td class="num">{{ d['in'] }}</td><td class="num">{{ d.out }}</td></tr>{% endfor %}</tbody></table>
+    </details>
+  </article>
+  <article class="card viz-card">
+    <header><h2>{{ t('dash.by_category') }}</h2><p>{{ t('dash.by_category_sub') }}</p></header>
+    <div class="chart" id="cat-chart" role="img" aria-label="{{ t('dash.by_category') }}"></div>
+    <details class="viz-table"><summary>{{ t('dash.table') }}</summary>
+      <table class="table compact"><thead><tr><th>{{ t('dash.category') }}</th><th class="num">{{ t('dash.value') }}</th></tr></thead>
+      <tbody>{% for c in categories %}<tr><td>{{ c.label }}</td><td class="num">{{ c.value|money }}</td></tr>{% endfor %}</tbody></table>
+    </details>
+  </article>
+</section>
+
+<section class="grid-2">
+  <article class="card">
+    <header><h2>{{ t('dash.alerts') }}</h2></header>
+    {% if alerts %}
+    <ul class="list">
+      {% for p in alerts %}{% set st = stock_status(p) %}
+      <li><a href="{{ url_for('views.product_detail', pid=p.id) }}">
+        <span class="list-main"><strong>{{ p.name }}</strong><small>{{ p.sku }} · {{ p.brand }}</small></span>
+        <span class="badge badge-{{ st }}"><i class="st st-{{ st }}" aria-hidden="true"></i>{{ p.quantity }} / {{ p.min_stock }}</span>
+      </a></li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="empty">{{ t('dash.alerts_empty') }}</p>{% endif %}
+  </article>
+  <article class="card">
+    <header class="row-between"><h2>{{ t('dash.recent') }}</h2><a class="link" href="{{ url_for('views.movements') }}">{{ t('dash.all_movements') }} →</a></header>
+    <ul class="list">
+      {% for m in recent %}
+      <li><a href="{{ url_for('views.product_detail', pid=m.product_id) }}">
+        <span class="list-main"><strong>{{ m.name }}</strong><small>{{ t('reason.' ~ m.reason) }} · {{ m.created_at|datefmt }}</small></span>
+        <span class="delta {{ 'pos' if m.qty > 0 else 'neg' }}">{{ '%+d'|format(m.qty) }}</span>
+      </a></li>
+      {% endfor %}
+    </ul>
+  </article>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+  window.DASH = {
+    lang: {{ lang()|tojson }},
+    flow: {{ flow|tojson }},
+    categories: {{ categories|tojson }},
+    labels: { in: {{ t('dash.in')|tojson }}, out: {{ t('dash.out_units')|tojson }} }
+  };
+</script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endblock %}

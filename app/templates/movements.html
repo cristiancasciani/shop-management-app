@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('movements.title') }}{% endblock %}
+{% block heading %}{{ t('movements.title') }}{% endblock %}
+{% block content %}
+<form class="filters card" method="get">
+  <label class="search"><span class="sr">{{ t('products.search') }}</span><input type="search" name="q" value="{{ args.q or '' }}" placeholder="{{ t('products.search') }}" /></label>
+  <label><span class="sr">{{ t('col.kind') }}</span><select name="kind">
+    <option value="">{{ t('col.kind') }}: {{ t('movements.all') }}</option>
+    {% for k in ['in', 'out', 'adjust'] %}<option value="{{ k }}" {{ 'selected' if args.kind == k }}>{{ t('kind.' ~ k) }}</option>{% endfor %}
+  </select></label>
+  <label class="inline"><span>{{ t('movements.from') }}</span><input type="date" name="from" value="{{ args['from'] or '' }}" /></label>
+  <label class="inline"><span>{{ t('movements.to') }}</span><input type="date" name="to" value="{{ args.to or '' }}" /></label>
+  <button class="btn btn-primary" type="submit">{{ t('movements.filter') }}</button>
+</form>
+<div class="results-head"><span>{{ t('movements.summary', inn=s.inn, out=s.out, n=s.n) }}</span></div>
+<div class="table-wrap card">
+<table class="table">
+  <thead><tr><th>{{ t('col.date') }}</th><th>{{ t('col.name') }}</th><th>{{ t('col.kind') }}</th><th class="hide-sm">{{ t('col.reason') }}</th><th class="hide-sm">{{ t('col.user') }}</th><th class="num">{{ t('move.qty') }}</th></tr></thead>
+  <tbody>{% for m in rows %}
+    <tr data-href="{{ url_for('views.product_detail', pid=m.product_id) }}">
+      <td class="nowrap">{{ m.created_at|datefmt }}</td>
+      <td><a href="{{ url_for('views.product_detail', pid=m.product_id) }}">{{ m.name }}</a> <small class="muted mono">{{ m.sku }}</small></td>
+      <td><span class="kind kind-{{ m.kind }}">{{ t('kind.' ~ m.kind) }}</span></td>
+      <td class="hide-sm">{{ t('reason.' ~ m.reason) }}{% if m.note %} <small class="muted">— {{ m.note }}</small>{% endif %}</td>
+      <td class="hide-sm muted">{{ m.user or '—' }}</td>
+      <td class="num"><span class="delta {{ 'pos' if m.qty > 0 else 'neg' }}">{{ '%+d'|format(m.qty) }}</span></td>
+    </tr>
+  {% else %}<tr><td colspan="6" class="empty">—</td></tr>{% endfor %}</tbody>
+</table>
+</div>
+{% if pages > 1 %}{% set a = args.to_dict() %}
+<nav class="pager">
+  {% if page > 1 %}{% set _ = a.update(page=page - 1) %}<a class="btn" href="?{{ a|urlencode }}">← {{ t('page.prev') }}</a>{% else %}<span class="btn" aria-disabled="true">← {{ t('page.prev') }}</span>{% endif %}
+  <span>{{ t('page.of', p=page, n=pages) }}</span>
+  {% if page < pages %}{% set _ = a.update(page=page + 1) %}<a class="btn" href="?{{ a|urlencode }}">{{ t('page.next') }} →</a>{% else %}<span class="btn" aria-disabled="true">{{ t('page.next') }} →</span>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}
