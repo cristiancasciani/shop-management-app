@@ -3,6 +3,9 @@
 A demo inventory manager for **Circuito**, an imaginary electronics shop.
 Personal demo project by [Cristian Casciani](https://cristiancasciani.github.io/).
 
+**Live demo:** https://circuito-shop-demo.onrender.com — log in with `demo` / `demo123`.
+It runs on Render's free plan: after a pause the first visit takes about 30 seconds, and the demo data is recreated on every restart.
+
 **Stack:** Python · Flask · SQLite · JavaScript (no frontend framework) · openpyxl
 
 ## Features
